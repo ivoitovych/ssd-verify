@@ -1,7 +1,7 @@
 #!/bin/bash
 # SSD destructive test: AES-CTR pseudorandom data, parallel hash of source,
 # read-back hash, N iterations with rotating keys+IVs.
-# Usage: sudo ./ssdtest.sh /dev/sdX [runs] [blocksize_MiB]   (defaults: 10, 1)
+# Usage: sudo ./ssd-verify.sh /dev/sdX [runs] [blocksize_MiB]   (defaults: 10, 1)
 set -Eeuo pipefail
 
 # --- Tunables ----------------------------------------------------------------
