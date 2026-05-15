@@ -4,6 +4,14 @@ Whole-device SSD integrity test: writes AES-CTR pseudorandom data, hashes in par
 
 > **WARNING:** This tool overwrites everything on the target device — partition tables, filesystems, all of it. There is no recovery. Read this README before running it.
 
+## Quick start
+
+```bash
+sudo ./ssd-verify.sh /dev/disk/by-id/YOUR_DEVICE_ID
+```
+
+Runs 10 verification passes with 1 MiB blocks (defaults). The script prompts for explicit `yes/YES` confirmation before any writes. See [Usage](#usage) for arguments and [Recommended workflow](#recommended-workflow) for picking the device path safely.
+
 ## What it does
 
 For each of N iterations:

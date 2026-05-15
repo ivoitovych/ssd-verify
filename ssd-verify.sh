@@ -65,11 +65,11 @@ while read -r sw _; do
     [[ $sw == Filename ]] && continue
     sw_real=$(readlink -f "$sw" 2>/dev/null || true)
     [[ -n $sw_real ]] || continue
-    for c in $(lsblk -nrpo NAME "$D"); do
+    while IFS= read -r c; do
         c_real=$(readlink -f "$c" 2>/dev/null || true)
         [[ -n $c_real && $sw_real == "$c_real" ]] && \
             { echo "ERROR: $c is active swap — swapoff first."; exit 1; }
-    done
+    done < <(lsblk -nrpo NAME "$D")
 done < /proc/swaps
 
 yes_or_die "DESTROY all data on $D?"
@@ -83,13 +83,13 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 ok=0
-for i in $(seq 1 "$N"); do
+for ((i=1; i<=N; i++)); do
     K=$(openssl rand -hex 32); IV=$(openssl rand -hex 16)
     printf '\n=== Run %d/%d  key=%s  iv=%s ===\n' "$i" "$N" "$K" "$IV"
 
-    dd if="$F" of="$D" bs=$B iflag=fullblock conv=fsync status=progress &
+    dd if="$F" of="$D" bs="$B" iflag=fullblock conv=fsync status=progress &
     W=$!
-    if ! E=$(dd if=/dev/zero bs=$B count=$S iflag=count_bytes status=none \
+    if ! E=$(dd if=/dev/zero bs="$B" count="$S" iflag=count_bytes status=none \
             | openssl enc -aes-256-ctr -K "$K" -iv "$IV" -nosalt \
             | tee "$F" | H); then
         echo "FAIL: source pipeline error"
@@ -100,7 +100,7 @@ for i in $(seq 1 "$N"); do
     sync; blockdev --flushbufs "$D" 2>/dev/null || true
     echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true
 
-    if ! A=$(dd if="$D" bs=$B count=$S iflag=count_bytes,fullblock status=progress | H); then
+    if ! A=$(dd if="$D" bs="$B" count="$S" iflag=count_bytes,fullblock status=progress | H); then
         echo "FAIL: read-back error"; continue
     fi
     printf 'expect %s\nactual %s  ' "$E" "$A"
