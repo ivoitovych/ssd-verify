@@ -1,5 +1,7 @@
 # ssd-verify
 
+[![shellcheck](https://github.com/ivoitovych/ssd-verify/actions/workflows/shellcheck.yml/badge.svg)](https://github.com/ivoitovych/ssd-verify/actions/workflows/shellcheck.yml)
+
 Whole-device SSD integrity test: writes AES-CTR pseudorandom data, hashes in parallel, reads back and verifies — N runs. Wipes existing data.
 
 > **WARNING:** This tool overwrites everything on the target device — partition tables, filesystems, all of it. There is no recovery. Read this README before running it.
@@ -7,7 +9,7 @@ Whole-device SSD integrity test: writes AES-CTR pseudorandom data, hashes in par
 ## Quick start
 
 ```bash
-sudo ./ssd-verify.sh /dev/disk/by-id/YOUR_DEVICE_ID
+sudo ./ssd-verify /dev/disk/by-id/YOUR_DEVICE_ID
 ```
 
 Runs 10 verification passes with 1 MiB blocks (defaults). The script prompts for explicit `yes/YES` confirmation before any writes. See [Usage](#usage) for arguments and [Recommended workflow](#recommended-workflow) for picking the device path safely.
@@ -69,7 +71,7 @@ A run passes only if `expected == actual`.
 ## Usage
 
 ```bash
-sudo ./ssd-verify.sh /dev/sdX [runs] [blocksize_MiB]
+sudo ./ssd-verify /dev/sdX [runs] [blocksize_MiB]
 ```
 
 Defaults: 10 runs, 1 MiB block size.
@@ -77,7 +79,7 @@ Defaults: 10 runs, 1 MiB block size.
 **Use a stable device path.** A suspicious or flaky drive may disconnect and reappear with a different letter (`sda` → `sdb`), and you do *not* want to clobber the wrong disk. Pick the path from `/dev/disk/by-id/`:
 
 ```bash
-sudo ./ssd-verify.sh /dev/disk/by-id/ata-Vendor_Model_SerialNumber 10 1 2>&1 | tee ssd-verify.log
+sudo ./ssd-verify /dev/disk/by-id/ata-Vendor_Model_SerialNumber 10 1 2>&1 | tee ssd-verify.log
 ```
 
 The log is useful for disputes — every run records its random key and IV, so the test is reproducible and inspectable after the fact.
@@ -157,13 +159,13 @@ ls -l /dev/disk/by-id/
 Run a short pass first, logging output:
 
 ```bash
-sudo ./ssd-verify.sh /dev/disk/by-id/YOUR_DEVICE_ID 1 1 2>&1 | tee ssd-verify-run1.log
+sudo ./ssd-verify /dev/disk/by-id/YOUR_DEVICE_ID 1 1 2>&1 | tee ssd-verify-run1.log
 ```
 
 If it passes and you want more confidence, run a longer pass:
 
 ```bash
-sudo ./ssd-verify.sh /dev/disk/by-id/YOUR_DEVICE_ID 10 1 2>&1 | tee ssd-verify-run2.log
+sudo ./ssd-verify /dev/disk/by-id/YOUR_DEVICE_ID 10 1 2>&1 | tee ssd-verify-run2.log
 ```
 
 ## Interpreting results
@@ -194,7 +196,7 @@ Look for I/O errors, USB resets, disconnects, controller errors, or SATA/NVMe er
 If you are testing a suspicious SSD for a seller dispute, keep the full terminal log:
 
 ```bash
-sudo ./ssd-verify.sh /dev/disk/by-id/YOUR_DEVICE_ID 2 1 2>&1 | tee ssd-verify.log
+sudo ./ssd-verify /dev/disk/by-id/YOUR_DEVICE_ID 2 1 2>&1 | tee ssd-verify.log
 ```
 
 Useful supporting evidence:
@@ -226,7 +228,7 @@ Measured throughput on SHA-NI-accelerated hardware (16 KiB blocks via `openssl s
 SHA-256 is the default because the small cost over SHA-1 is trivial on accelerated hardware, and SHA-256 carries more weight if the log ends up in a dispute. On CPUs without SHA-NI the trade-off shifts — benchmark your own machine. The bundled helper script profiles every digest your `openssl` exposes and prints throughput per block size:
 
 ```bash
-./hash_speed_test.sh 3
+./hash_speed_test.sh 3   # 3 seconds per algorithm
 ```
 
 You can also benchmark the AES-CTR generation side:
