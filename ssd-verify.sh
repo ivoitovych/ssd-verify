@@ -104,7 +104,7 @@ for ((i=1; i<=N; i++)); do
         echo "FAIL: read-back error"; continue
     fi
     printf 'expect %s\nactual %s  ' "$E" "$A"
-    if [[ $E == $A ]]; then echo PASS; ok=$((ok+1)); else echo FAIL; fi
+    if [[ $E == "$A" ]]; then echo PASS; ok=$((ok+1)); else echo FAIL; fi
 done
 
 printf '\n=== %d/%d runs passed ===\n' "$ok" "$N"
